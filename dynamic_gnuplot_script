@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# sar-P-script : script that will take sar-P and plot it
+
+rm sar_data_live
+
+# how many times does the user want sar -P to run?
+read -p "Enter how many times you want sar -P to run live --> " num
+
+writedata() {
+	for i in $(seq 1 $num); do
+		LC_TIME='POSIX' sar -P ALL 1 1 | grep "all" > sar_P_1_1
+		sed -i '/Average/d' sar_P_1_1
+		tr -s  ' ' ',' < sar_P_1_1 > new_sar_P_1_1
+		cut -d ',' -f 1 new_sar_P_1_1 > sar_times
+		cut -d ',' -f 8 new_sar_P_1_1 > sar_idle
+		paste sar_times sar_idle >> sar_data_live
+	done
+}
+
+writedata &
+sleep 2
+gnuplot liveplot.gnu
