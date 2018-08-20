@@ -1,13 +1,10 @@
-Live System Activity Report
-===========================
+# Live System Activity Report
 
-Introduction to the script
---------------------------
+## Introduction to the script
 
 The function of this bash script is to run the `sar -P ALL 1 1` command, and from it obtain the necessary information to plot the %idle usage of all of the CPU's over time.
 
-Prerequisites
--------------
+## Prerequisites
 
 ### The sar library
 
@@ -23,6 +20,25 @@ You can download gnuplot from [here](https://sourceforge.net/projects/gnuplot/fi
 
 This software is built for Linux Distributions such as Ubuntu and LUbuntu.
 
-How to run the script
----------------------
+## How to run the script
 
+### Step 1
+
+Open your terminal, and go to the directory where the scripts are stored in (usually in `Downloads`).
+
+### Step 2
+
+Enter the following command:
+
+```bash
+$ dynamic_gnuplot_script
+```
+
+### Step 3
+
+When met with the following prompt: `Enter how many times you want sar -P to run live -->`, enter the amount of times you want `sar -P` to run. 
+
+### Step 4
+
+
+####
