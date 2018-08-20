@@ -36,9 +36,22 @@ $ dynamic_gnuplot_script
 
 ### Step 3
 
-When met with the following prompt: `Enter how many times you want sar -P to run live -->`, enter the amount of times you want `sar -P` to run. 
+When met with the following prompt:
+
+```
+Enter how many times you want sar -P to run live -->
+```
+
+Enter the amount of times you want `sar -P` to run.
 
 ### Step 4
 
+How to exit the script
 
-####
+#### Method 1
+
+Wait until the specified time that was entered in the prompt is complete.
+
+#### Method 2
+
+Click on the terminal and then type the `Control` and the `C` characters together.
