@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# sar-P-script : script that will take sar-P and plot it
+for i in {0..8}; do
+	if [ -f live_f$i ]; then
+		rm live_f$i
+	fi
+
+	if [ -f f$i ]; then
+		rm f$i
+	fi
+done
+
+if [ -f liveplot.gnu ]; then
+	rm liveplot.gnu
+fi
+
+cat <<- EOF
+        fields you can choose from:
+        1 - user
+        2 - nice
+        3 - system
+        4 - iowait
+        5 - steal
+        6 - idle
+EOF
+
+read -p "Enter the numbers that correlate with which fields you wish to see over time (separated by commas) --> " fields
+
+# creates list of all the fields
+IFS=', ' read -r -a array <<< "$fields"
+
+length=${#array[@]}
+
+# checks that the array has correct fields
+for i in "${!array[@]}"; do
+	if [ ${array[i]} -ge 1 -a ${array[i]} -le 6 ]; then
+		continue
+	else
+		echo "Invalid input"
+		exit 1
+	fi
+done
+
+# how many times does the user want sar -P to run?
+read -p "Enter how many times you want sar -P to run live --> " num
+
+writedata() {
+	for i in $(seq 1 $num); do
+		LC_TIME='POSIX' sar -P ALL 1 1 | grep "all" > sar_P_1_1
+		sed -i '/Average/d' sar_P_1_1
+		tr -s  ' ' ',' < sar_P_1_1 > new_sar_P_1_1
+		cut -d ',' -f 1 new_sar_P_1_1 > f1
+
+		for element in "${!array[@]}"; do
+			x="${array[element]}"
+			field=$((x + 2))
+			cut -d ',' -f $field new_sar_P_1_1 > f$field
+			paste f1 f$field >> live_f$element
+		done
+	done
+	kill -9 $(ps -ef | grep "liveplot.gnu" | grep -v grep | awk '{print $2}')
+	kill -9 $(ps -ef | grep "dynamic_gnuplot_script" | grep -v grep | awk '{print $2}')
+
+}
+
+function gnuplotPreferences() {
+	echo "set xdata time" >> liveplot.gnu
+	echo "set timefmt '%H:%M:%S'" >>  liveplot.gnu
+	echo "set format x '%H:%M:%S'" >> liveplot.gnu
+	echo "set ylabel 'field'" >> liveplot.gnu
+	echo "set xlabel 'time'" >> liveplot.gnu
+	echo "set title 'Live Sar Data'" >> liveplot.gnu
+	echo "set yrange [0:100]" >> liveplot.gnu
+	echo "set style line 11 lc rgb '#808080' lt 1" >> liveplot.gnu
+	echo "set border 3 back ls 11" >> liveplot.gnu
+	echo "set style line 12 lc rgb '#808080' lt 0 lw 1" >> liveplot.gnu
+	echo "set grid back ls 12" >> liveplot.gnu
+	echo "set tics nomirror" >> liveplot.gnu
+	echo "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5 " >> liveplot.gnu
+}
+
+writedata &
+
+# Generate Plots
+gnuplotPreferences
+
+len=$(( length - 1 ))
+for i in $(seq 0 $len); do
+	if [ "${array[i]}" -eq 1 ]; then
+	       name="%user"
+	fi
+
+	if [ "${array[i]}" -eq 2 ]; then
+	       name="%nice"
+	fi
+
+	if [ "${array[i]}" -eq 3 ]; then
+	       name="%system"
+	fi
+
+	if [ "${array[i]}" -eq 4 ]; then
+	       name="%iowait"
+	fi
+
+	if [ "${array[i]}" -eq 5 ]; then
+	       name="%steal"
+	fi
+
+	if [ "${array[i]}" -eq 6 ]; then
+	       name="%idle"
+	fi
+
+	echo "set term wxt $i" >> liveplot.gnu
+	echo "plot 'live_f$i' using 1:2 with linespoints ls 1 title '$name'" >> liveplot.gnu
+
+done
+
+echo "pause 1" >> liveplot.gnu
+echo "reread" >> liveplot.gnu
+
+sleep 2
+gnuplot liveplot.gnu
