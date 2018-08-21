@@ -77,7 +77,7 @@ function gnuplotPreferences() {
 	echo "set style line 12 lc rgb '#808080' lt 0 lw 1" >> liveplot.gnu
 	echo "set grid back ls 12" >> liveplot.gnu
 	echo "set tics nomirror" >> liveplot.gnu
-	echo "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5 " >> liveplot.gnu
+	echo "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 0.5 " >> liveplot.gnu
 }
 
 writedata &
