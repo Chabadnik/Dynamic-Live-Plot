@@ -11,10 +11,12 @@ for i in {0..8}; do
 	fi
 done
 
+# checking if liveplot.gnu exists
 if [ -f liveplot.gnu ]; then
 	rm liveplot.gnu
 fi
 
+# printing out all the options
 cat <<- EOF
         fields you can choose from:
         1 - user
@@ -25,11 +27,13 @@ cat <<- EOF
         6 - idle
 EOF
 
+# prompt for fields the user wants to see
 read -p "Enter the numbers that correlate with which fields you wish to see over time (separated by commas) --> " fields
 
 # creates list of all the fields
 IFS=', ' read -r -a array <<< "$fields"
 
+# length of the array
 length=${#array[@]}
 
 # checks that the array has correct fields
@@ -47,28 +51,43 @@ read -p "Enter how many times you want sar -P to run live --> " num
 
 writedata() {
 	for i in $(seq 1 $num); do
+
+		# making time setting 24h, and outputing sar data
 		LC_TIME='POSIX' sar -P ALL 1 1 | grep "all" > sar_P_1_1
+
+		# getting rid of unecessary lines
 		sed -i '/Average/d' sar_P_1_1
+
+		# replacing spaces with a comma
 		tr -s  ' ' ',' < sar_P_1_1 > new_sar_P_1_1
+
+		# cutting first field into a time file
 		cut -d ',' -f 1 new_sar_P_1_1 > f1
 
+		# for every index in the array
 		for element in "${!array[@]}"; do
 			x="${array[element]}"
 			field=$((x + 2))
+
+			# cut the field into field file
 			cut -d ',' -f $field new_sar_P_1_1 > f$field
+
+			# paste time file to field file, output to liveplot file
 			paste f1 f$field >> live_f$element
 		done
 	done
+
+	# kill processes when the time limit is reached
 	kill -9 $(ps -ef | grep "liveplot.gnu" | grep -v grep | awk '{print $2}')
 	kill -9 $(ps -ef | grep "dynamic_gnuplot_script" | grep -v grep | awk '{print $2}')
 
 }
 
+# create all the default settings/preferences for gnuplot
 function gnuplotPreferences() {
 	echo "set xdata time" >> liveplot.gnu
 	echo "set timefmt '%H:%M:%S'" >>  liveplot.gnu
 	echo "set format x '%H:%M:%S'" >> liveplot.gnu
-	echo "set ylabel 'field'" >> liveplot.gnu
 	echo "set xlabel 'time'" >> liveplot.gnu
 	echo "set title 'Live Sar Data'" >> liveplot.gnu
 	echo "set yrange [0:100]" >> liveplot.gnu
@@ -80,17 +99,23 @@ function gnuplotPreferences() {
 	echo "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 0.5 " >> liveplot.gnu
 }
 
+# run writedata in the background
 writedata &
 
 # Generate Plots
 gnuplotPreferences
 
 len=$(( length - 1 ))
+
+# for every index in array
 for i in $(seq 0 $len); do
+
+	# if the element at index is 1, then name is "%user"
 	if [ "${array[i]}" -eq 1 ]; then
 	       name="%user"
 	fi
 
+	# if the element at index is 2, then name is "%nice"
 	if [ "${array[i]}" -eq 2 ]; then
 	       name="%nice"
 	fi
@@ -111,13 +136,21 @@ for i in $(seq 0 $len); do
 	       name="%idle"
 	fi
 
+	# set y axis label as the name
+	echo "set ylabel '$name'" >> liveplot.gnu
+
+	# make a terminal
 	echo "set term wxt $i" >> liveplot.gnu
+
+	# plot the file
 	echo "plot 'live_f$i' using 1:2 with linespoints ls 1 title '$name'" >> liveplot.gnu
 
 done
 
+# pause for 1 second and reread the file
 echo "pause 1" >> liveplot.gnu
 echo "reread" >> liveplot.gnu
 
+# sleep for 2 secnds and run the liveplot.gnu file through gnuplot
 sleep 2
 gnuplot liveplot.gnu
