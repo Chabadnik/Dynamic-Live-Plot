@@ -31,7 +31,7 @@ Open your terminal, and go to the directory where the scripts are stored in (usu
 Enter the following command:
 
 ```bash
-$ dynamic_live_plot
+dynamic_live_plot
 ```
 
 ### Step 3
@@ -47,8 +47,8 @@ fields you can choose from:
 5 - steal
 6 - idle
 
-read -p "Enter the numbers that correlate with which fields you wish to see
-over time (separated by commas) --> " fields
+Enter the numbers that correlate with which fields you wish to see
+over time (separated by commas) -->
 ```
 
 Type the fields that you wish to plot over time. For example if you wish to see a plot user and idle over time, type `1,6`.
